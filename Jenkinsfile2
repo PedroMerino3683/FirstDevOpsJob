@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+ 
+    stages {
+        stage('SCM') {
+            steps {
+               git branch: 'main', url: 'https://github.com/PedroMerino3683/FirstDevOpsJob'
+            }
+        }
+        
+     stage ("Docker Build") {
+           
+           steps{
+             bat(script: 'docker login --username pmec3683 --password Dr4k0n3683?' , returnStdout:true);
+             bat(script: 'docker build -t pmec3683/servicejava .' , returnStdout:true);
+             bat(script: 'docker push pmec3683/servicejava' , returnStdout:true);  
+           }
+       }   
+       
+       
+        stage ("Deploy AKS") {
+           steps {
+            bat(script: 'az login --service-principal --username b6b2b416-3abe-41fe-b51e-11aaf8e4bcdf --password dvD8Q~AVKhqLVUFVsJ26kCjrZseLomVlnbjesaGw --tenant 7760d93c-667b-4726-80af-4d45908b0155', returnStdout: true);
+            bat(script: 'az aks get-credentials --resource-group DevOps --name cluster-devops23 & kubectl config get-contexts --kubeconfig=%KUBE_PATH_CONFIG%', returnStdout: true);
+            bat(script: 'kubectl config use-context cluster-devops23 --kubeconfig=%KUBE_PATH_CONFIG%', returnStdout: true);
+            bat(script: 'kubectl apply -f Devops.yaml --kubeconfig=%KUBE_PATH_CONFIG%', returnStdout: true);
+            bat(script: 'kubectl rollout restart deployment app-deployment-devops --kubeconfig=%KUBE_PATH_CONFIG%', returnStdout: true);
+           }
+       }
+    }
+}
